@@ -12,6 +12,7 @@ def ujkeres(p1,p2,r):
     print("scale {}".format(scale))
     if (diff[0] == 0):
         mmeroleges = 0
+        iranyvektor = np.array([0,1])
     else:
         m = diff[1]/diff[0]
         if (m == 0):
@@ -54,12 +55,12 @@ def getFurthestNeighbors(x, y):
             
     return {'x': x[ind], 'y': y[ind]}
 
-p1 = np.array([-0.707,0.707])
-p2 = np.array([0.707,0.707])
+#p1 = np.array([-0.707,0.707])
+#p2 = np.array([0.707,0.707])
 
 #p1 = np.array([-1,0.5])
 #p2 = np.array([1,0.5])
 
-a = ujkeres(p1,p2,1)
+#a = ujkeres(p1,p2,1)
 
-print("ujpont {}".format(a))
+#print("ujpont {}".format(a))

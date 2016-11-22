@@ -5,6 +5,7 @@ import numpy as np
 import RPi.GPIO as GPIO
 from statemachine import StateMapElement, StateMachine
 from ujkeres import ujkeres
+import time
 
 class Msg:
     msg = ""
@@ -72,6 +73,7 @@ stateMap = [
 stateMachine = StateMachine(stateMap)
 
 pointArray = []
+currPos = []
 
 client.write_register(500, 0)
 
@@ -109,10 +111,12 @@ while 1:
         readyEdge = ReadyEdge.chk(dataReady)['value']
 
         if (readyEdge):
+            time.sleep(2)
             xy = client.read_holding_registers(dataXReg,4)
             x =  getSigned16bit(xy.registers[0])
             y = getSigned16bit(xy.registers[2])
-            pointArray.append([x,y])
+            currPos = [x,y]
+            pointArray.append(currPos)
             msg.printMsg("\n Data ready signal changed to {}".format(dataReady))
             stateMachine.event("RobotPositionReady")
             continue
@@ -137,11 +141,23 @@ while 1:
         newStart = newPointData["kezdo"]
         newEnd = newPointData["veg"]
 
-        client.write_register(502, 10)
-        client.write_register(504, 0)
+        newSd = newStart - currPos
+        newEd = newEnd - currPos
 
-        client.write_register(506, 0)
-        client.write_register(508, 10)
+        nxd = newSd.astype(int)[0]
+        nyd = newSd.astype(int)[1]
+
+        nexd = newEd.astype(int)[0]
+        neyd = newEd.astype(int)[1]
+        print("nxd nyd {} {}".format(nxd,nyd))
+        print("nexd neyd {} {}".format(nexd,neyd))
+
+        
+        client.write_register(502, nxd)
+        client.write_register(504, nyd)
+
+        client.write_register(506, nexd)
+        client.write_register(508, neyd)
 
         client.write_register(500, 0)
 
