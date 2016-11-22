@@ -37,6 +37,10 @@ def getSigned16bit(a):
         return a - (1 << 16)
     return a
 
+def getUnsigned16bit(a):
+    if (a < 0):
+        
+
 GPIO.setmode (GPIO.BCM)
 GPIO.setup(4, GPIO.IN)
 
