@@ -37,9 +37,6 @@ def getSigned16bit(a):
         return a - (1 << 16)
     return a
 
-def getUnsigned16bit(a):
-    if (a < 0):
-        
 
 GPIO.setmode (GPIO.BCM)
 GPIO.setup(4, GPIO.IN)
@@ -72,6 +69,7 @@ stateMap = [
     StateMapElement("RetMov","ReturnMovement","SignalWait"),
     StateMapElement("NewPositionSet","CalculateNewPosition","WaitScanReady"),
     StateMapElement("ScanReady","WaitScanReady","SignalWait"),
+    StateMapElement("ReturnScanning","CheckPositionList","ReturnMovement"),
 ]
 
 stateMachine = StateMachine(stateMap)
@@ -81,6 +79,15 @@ currPos = []
 
 client.write_register(500, 0)
 
+def setNeg(n):
+    if (n < 0):
+        return n+pow(2,16);
+    else:
+        return n;
+
+scanPoints = []
+scanning = 0
+    
 while 1:
     signalType = ""
 
@@ -101,7 +108,7 @@ while 1:
             client.write_register(500, 1)
             stateMachine.event("SignalRise")
             continue
-
+    
     # Gets robot's current position data    
     elif (cs == "GetPosition"):
         dataReady = client.read_holding_registers(newDataReadyReg,1)
@@ -128,6 +135,13 @@ while 1:
     # Check if we already have two position data and can calculate next one
     elif (cs == "CheckPositionList"):
         print("{}, length: {} ".format(pointArray,len(pointArray)))
+        if (scanning == 1):
+            scanPoints.append(currPos)
+            if (len(scanPoints) < 2):
+                stateMachine.event("ReturnScanning")
+            else:
+                scanPoints = []
+                stateMachine.event("GetNextPos")
         if (len(pointArray) < 2):
             stateMachine.event("GetMoreInitialPos")
         else:
@@ -141,7 +155,7 @@ while 1:
 
     # Calculates new position data and sends it to robot
     elif (cs == "CalculateNewPosition"):
-        newPointData = ujkeres(pointArray[0],pointArray[1],60)
+        newPointData = ujkeres(pointArray[0],pointArray[1],30)
         newStart = newPointData["kezdo"]
         newEnd = newPointData["veg"]
 
@@ -153,9 +167,16 @@ while 1:
 
         nexd = newEd.astype(int)[0]
         neyd = newEd.astype(int)[1]
-        print("nxd nyd {} {}".format(nxd,nyd))
-        print("nexd neyd {} {}".format(nexd,neyd))
 
+        print("Scan positions: {} -> {} ".format(newStart,newEnd))
+        #print("nxd nyd {} {}".format(nxd,nyd))
+        #print("nexd neyd {} {}".format(nexd,neyd))
+
+        nxd = setNeg(nxd)
+        nyd = setNeg(nyd)
+
+        nexd = setNeg(nexd)
+        neyd = setNeg(neyd)
         
         client.write_register(502, nxd)
         client.write_register(504, nyd)
@@ -164,14 +185,14 @@ while 1:
         client.write_register(508, neyd)
 
         client.write_register(500, 0)
-
+        scanning = 1
         stateMachine.event("NewPositionSet")
 
     elif (cs == "WaitScanReady"):
         dataReady = client.read_holding_registers(newDataReadyReg,1)
         dataReady = dataReady.registers[0]
         if (dataReady == 5):
-            stateMachine("ScanReady")
+            stateMachine.event("ScanReady")
 
     #msg.printMsg("input: {} | filtered: {} | edge: {} ".format(input_v,signal,signalEdge))
 

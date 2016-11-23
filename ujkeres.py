@@ -5,11 +5,11 @@ def ujkeres(p1,p2,r):
     p2 = np.array(p2)
     felezo = (p1+p2)/2
     diff = p1-p2
-    print("diff {}".format(diff))
+    #print("diff {}".format(diff))
     n = np.linalg.norm(diff)
-    print("n {}".format(n))
+    #print("n {}".format(n))
     scale = 1/(n/(2*r)*r)
-    print("scale {}".format(scale))
+    #print("scale {}".format(scale))
     if (diff[0] == 0):
         mmeroleges = 0
         iranyvektor = np.array([0,1])
@@ -21,8 +21,8 @@ def ujkeres(p1,p2,r):
             mmeroleges = -1/m
             iranyvektor = np.array([1,mmeroleges] / np.sqrt(1+mmeroleges**2))
     
-    print("iranyvektor {}".format(iranyvektor))
-    print("felezo {}".format(felezo))
+    #print("iranyvektor {}".format(iranyvektor))
+    #print("felezo {}".format(felezo))
     kezdo = felezo + iranyvektor*(2*r)
     veg = felezo - iranyvektor*(2*r)
     return {'kezdo': kezdo, 'veg': veg}

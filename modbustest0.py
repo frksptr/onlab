@@ -8,18 +8,18 @@ GPIO.setmode (GPIO.BCM)
 GPIO.setup(4, GPIO.IN)
 
 
-
+def setNeg(n):
+    if (n < 0):
+        return ~n+1+pow(2,15);
+    else:
+        return n;
+    
 
 try:
     client = ModbusTcpClient('192.168.0.104',502)
     conn = client.connect()
     print(conn)
-    while 1==1: 
-        input_v = GPIO.input(4)
-        
-        
-    print(sys.argv[1])
-    client.write_register(500, int(sys.argv[1]))
+    client.write_register(500, pow(2,16)-5)
     client.close()
 except:
     print(sys.exc_info()[0])
