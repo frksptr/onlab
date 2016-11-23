@@ -94,7 +94,7 @@ def setNeg(n):
         return n;
 
 t = datetime.now().time().strftime("%H%M%S")
-f = "./meres/30keres"+t+".txt"
+f = "./meres/20keres"+t+".txt"
 
 def log(s):
     with open(f, "a") as myfile:
@@ -106,7 +106,7 @@ scanning = 0
 pointsx = []
 pointsy = []
 iterationCounter = 0
-maxIterations = 4
+maxIterations = 2
 
 while 1:
     signalType = ""
