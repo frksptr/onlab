@@ -4,6 +4,7 @@ import sys
 import numpy as np
 import RPi.GPIO as GPIO
 from statemachine import StateMapElement, StateMachine
+from datetime import datetime
 from ujkeres import ujkeres
 import time
 
@@ -78,12 +79,19 @@ pointArray = []
 currPos = []
 
 client.write_register(500, 0)
+t = datetime.now().time().strftime("%H%M%S")
+f = "keres"+t+".txt"
 
 def setNeg(n):
     if (n < 0):
         return n+pow(2,16);
     else:
         return n;
+
+def log(s):
+    with open(f, "a") as myfile:
+        myfile.write(s)
+    return
 
 scanPoints = []
 scanning = 0
@@ -127,6 +135,7 @@ while 1:
             x =  getSigned16bit(xy.registers[0])
             y = getSigned16bit(xy.registers[2])
             currPos = [x,y]
+            log("\n {},{}".format(x,y))
             pointArray.append(currPos)
             msg.printMsg("\n Data ready signal changed to {}".format(dataReady))
             stateMachine.event("RobotPositionReady")
@@ -159,6 +168,9 @@ while 1:
         newStart = newPointData["kezdo"]
         newEnd = newPointData["veg"]
 
+        log("\n {},{}, start".format(newStart.astype(int)[0],newStart.astype(int)[1])
+        log("\n {},{}, end".format(newEnd.astype(int)[0],newEnd.astype(int)[1])
+
         newSd = newStart - currPos
         newEd = newEnd - currPos
 
@@ -167,6 +179,7 @@ while 1:
 
         nexd = newEd.astype(int)[0]
         neyd = newEd.astype(int)[1]
+        
 
         print("Scan positions: {} -> {} ".format(newStart,newEnd))
         #print("nxd nyd {} {}".format(nxd,nyd))
