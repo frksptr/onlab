@@ -6,6 +6,7 @@ import RPi.GPIO as GPIO
 from statemachine import StateMapElement, StateMachine
 from datetime import datetime
 from ujkeres import ujkeres
+from korkeres import findCircle
 import time
 
 class Msg:
@@ -31,7 +32,10 @@ class Msg:
 
 #y 30 110
 #x 360 440
+        
 #z 25
+
+#406-33
 
 def getSigned16bit(a):
     if (a >> 15) & 1:
@@ -48,8 +52,6 @@ dataXReg = 1000;
 dataYReg = 1002;
 newDataReadyReg = 1006;
 dataRead = 0;
-fileName = "test1610.txt";
-
 client = ModbusTcpClient('192.168.0.104',502)
 conn = client.connect()
 
@@ -72,6 +74,8 @@ stateMap = [
     StateMapElement("NewPositionSet","CalculateNewPosition","WaitScanReady"),
     StateMapElement("ScanReady","WaitScanReady","SignalWait"),
     StateMapElement("ReturnScanning","CheckPositionList","ReturnMovement"),
+    StateMapElement("IterationOver","CheckPositionList","CalculateCenter"),
+    StateMapElement("Finished","CalculateCenter","Stop"),
 ]
 
 stateMachine = StateMachine(stateMap)
@@ -80,6 +84,7 @@ pointArray = []
 currPos = []
 
 client.write_register(500, 0)
+client.write_register(510, 0)
 
 
 def setNeg(n):
@@ -89,7 +94,7 @@ def setNeg(n):
         return n;
 
 t = datetime.now().time().strftime("%H%M%S")
-f = "keres"+t+".txt"
+f = "./meres/30keres"+t+".txt"
 
 def log(s):
     with open(f, "a") as myfile:
@@ -98,7 +103,11 @@ def log(s):
 
 scanPoints = []
 scanning = 0
-    
+pointsx = []
+pointsy = []
+iterationCounter = 0
+maxIterations = 4
+
 while 1:
     signalType = ""
 
@@ -133,7 +142,7 @@ while 1:
         readyEdge = ReadyEdge.chk(dataReady)['value']
 
         if (readyEdge):
-            time.sleep(2)
+            time.sleep(0.5)
             xy = client.read_holding_registers(dataXReg,4)
             x =  getSigned16bit(xy.registers[0])
             y = getSigned16bit(xy.registers[2])
@@ -144,6 +153,8 @@ while 1:
                     continue
 
             currPos = [x,y]
+            pointsx.append(float(x))
+            pointsy.append(float(y))
             log("\n {},{}".format(x,y))
             pointArray.append(currPos)
             msg.printMsg("\n Data ready signal changed to {}".format(dataReady))
@@ -159,6 +170,10 @@ while 1:
                 stateMachine.event("ReturnScanning")
             else:
                 scanPoints = []
+                if (iterationCounter == maxIterations):
+                    print("getting center")
+                    stateMachine.event("IterationOver")
+                    continue
                 stateMachine.event("GetNextPos")
         if (len(pointArray) < 2):
             stateMachine.event("GetMoreInitialPos")
@@ -173,7 +188,8 @@ while 1:
 
     # Calculates new position data and sends it to robot
     elif (cs == "CalculateNewPosition"):
-        newPointData = ujkeres(pointArray[0],pointArray[1],30)
+        newPointData = ujkeres(pointsx,pointsy,30)
+        iterationCounter += 1
         newStart = newPointData["kezdo"]
         newEnd = newPointData["veg"]
 
@@ -209,6 +225,28 @@ while 1:
         client.write_register(500, 0)
         scanning = 1
         stateMachine.event("NewPositionSet")
+
+    #Calculates and moves to center
+    elif (cs == "CalculateCenter"):
+        c = findCircle(pointsx,pointsy)
+        print("findcircle: {}, current pos: {}".format(c,currPos))
+        c = np.array(c)       
+        c = c - currPos
+
+        cx = setNeg(c.astype(int)[0])
+        cy = setNeg(c.astype(int)[1])
+
+        client.write_register(512, cx)
+        client.write_register(514, cy)
+        time.sleep(0.5)
+        client.write_register(500, 5)
+        client.write_register(510, 1)
+        stateMachine.event("Finished")
+
+    elif (cs == "Stop"):
+        var = raw_input("finished?")
+        log("finished")
+        
 
     elif (cs == "WaitScanReady"):
         dataReady = client.read_holding_registers(newDataReadyReg,1)

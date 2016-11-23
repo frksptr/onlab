@@ -1,23 +1,51 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 def findCircle(array):
-	
-r = 1;
-p1 = np.array([1, 0]).transpose();
-p2 = np.array([0, -1]).transpose();
-pi = np.pi;
+    M = np.empty((0,3),int)
+    b = np.empty((0,1),int)
+    x = np.array([])
+    y = np.array([])
+    startx = []
+    starty = []
+    endx = []
+    endy = []
+    f = "./meres/keres105241.txt"
+    with open(f,"r") as file:
+        for line in file:
+            currentline = line.split(",")
+            if (len(currentline) == 2):
+                xi = int(currentline[0])
+                yi = int(currentline[1])
+                M = np.append(M, np.array([[xi,yi,1]]),axis=0)
+                b = np.append(b, np.array([[-xi*xi-yi*yi]]),axis=0)
+                x = np.append(x,xi)
+                y = np.append(y,yi)
+            elif(len(currentline) == 3):
+                xi = int(currentline[0])
+                yi = int(currentline[1])
+                if ("start" in currentline[2]):
+                    startx.append(xi)
+                    starty.append(yi)
+                if ("end" in currentline[2]):
+                    endx.append(xi)
+                    endy.append(yi)
 
-center = (p1+p2)/2;
-diff = p2-p1;
+    a = np.linalg.lstsq(M, b)[0]
+    a1 = -a[0]/2
+    a2 = -a[1]/2
+    
+    print(a1)
+    print(a2)
+    
+    plt.scatter(x, y)
+    plt.scatter(a1,a2,color='red')
+    plt.scatter(startx,starty,color='yellow')
+    plt.scatter(endx,endy,color='green')
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.autoscale('True','both','False')
+    plt.show()
 
-a = np.linalg.norm(diff);
-m = np.sqrt(r*r-(a/2)*(a/2));
-mtot = r + m;
 
-alpha = np.arctan(diff[1]/diff[0]);
-beta = alpha+pi/2;
-
-beta = np.array([alpha+pi/2, -pi/2+alpha]).transpose();
-
-p3 =  np.column_stack((np.cos(beta),np.sin(beta),np.array([1, 1])))
-p3 = p3.dot( np.vstack((mtot * np.identity(2), center)) )
+findCircle([])

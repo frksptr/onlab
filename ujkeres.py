@@ -1,8 +1,11 @@
 import numpy as np
 
-def ujkeres(p1,p2,r):
-    p1 = np.array(p1)
-    p2 = np.array(p2)
+def ujkeres(x,y,r):
+    a = getFurthestNeighbors(x,y)
+    print("furthest neighbors: {} - {}".format(a[0],a[1]))
+    p1 = np.array(a[0])
+    p2 = np.array(a[1])
+
     felezo = (p1+p2)/2
     diff = p1-p2
     #print("diff {}".format(diff))
@@ -33,34 +36,35 @@ def sortCCW(xArray, yArray):
     tan = np.arctan2(yArray - cy, xArray - cx)
 
     s = np.argsort(tan)
-
+    x = np.array(xArray)
+    y = np.array(yArray)
     xs = x[s]
     ys = y[s]
     return {'x': xs, 'y': ys}
 
 def getFurthestNeighbors(x, y):
-    size = x.size
-    a = np.array(x[0], y[0])
-    b = np.array(x[size-1], y[size-1])
-    maxDist = np.linalg.norm(a-b)
-    ind = np.array([1, size-1])
-    
-    for i in range(1,size - 1):
-        a = np.array([x[i], y[i]])
-        b = np.array([x[i-1], y[i-1]])
-        dist = np.linalg.norm(a - b)
-        if(dist > maxDist):
-            maxDist = dist
-            ind = np.array([i, i-1])
-            
-    return {'x': x[ind], 'y': y[ind]}
-
-#p1 = np.array([-0.707,0.707])
-#p2 = np.array([0.707,0.707])
-
-#p1 = np.array([-1,0.5])
-#p2 = np.array([1,0.5])
-
-#a = ujkeres(p1,p2,1)
-
-#print("ujpont {}".format(a))
+    a = sortCCW(x,y)
+    x = a['x']
+    y = a['y']
+    print(x)
+    print(y)
+    size = len(x)
+    D = np.zeros((size,size),float)
+    M = 0
+    Mi = 0
+    Mj = 0
+    for i in range(0,size):
+        pi = np.array([x[i],y[i]])
+        if (i == size-1):
+            j = 0
+        else:
+            j = i+1
+        pj = np.array([x[j],y[j]])
+        d = np.linalg.norm(pi-pj)
+        if (d > M):
+            M = d
+            Mi = i
+            Mj  = j
+    p1 = [x[Mi],y[Mi]]
+    p2 = [x[Mj],y[Mj]]
+    return [p1,p2]
