@@ -65,6 +65,7 @@ dataReadyEdgeDetected = 0
 stateMap = [
     StateMapElement("SignalRise","SignalWait","GetPosition"),
     StateMapElement("RobotPositionReady","GetPosition","CheckPositionList"),
+    StateMapElement("FalsePosition","GetPosition","ReturnMovement"),
     StateMapElement("GetMoreInitialPos","CheckPositionList","ReturnMovement"),
     StateMapElement("GetNextPos","CheckPositionList","CalculateNewPosition"),
     StateMapElement("RetMov","ReturnMovement","SignalWait"),
@@ -79,14 +80,16 @@ pointArray = []
 currPos = []
 
 client.write_register(500, 0)
-t = datetime.now().time().strftime("%H%M%S")
-f = "keres"+t+".txt"
+
 
 def setNeg(n):
     if (n < 0):
         return n+pow(2,16);
     else:
         return n;
+
+t = datetime.now().time().strftime("%H%M%S")
+f = "keres"+t+".txt"
 
 def log(s):
     with open(f, "a") as myfile:
@@ -134,6 +137,12 @@ while 1:
             xy = client.read_holding_registers(dataXReg,4)
             x =  getSigned16bit(xy.registers[0])
             y = getSigned16bit(xy.registers[2])
+            if (len(currPos)>0):
+                d = np.linalg.norm(np.array([x,y])-np.array(currPos))
+                if (d < 10):
+                    stateMachine.event("FalsePosition")
+                    continue
+
             currPos = [x,y]
             log("\n {},{}".format(x,y))
             pointArray.append(currPos)
@@ -168,8 +177,8 @@ while 1:
         newStart = newPointData["kezdo"]
         newEnd = newPointData["veg"]
 
-        log("\n {},{}, start".format(newStart.astype(int)[0],newStart.astype(int)[1])
-        log("\n {},{}, end".format(newEnd.astype(int)[0],newEnd.astype(int)[1])
+        log("\n {},{}, start".format(newStart.astype(int)[0],newStart.astype(int)[1]))
+        log("\n {},{}, end".format(newEnd.astype(int)[0],newEnd.astype(int)[1]))
 
         newSd = newStart - currPos
         newEd = newEnd - currPos

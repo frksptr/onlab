@@ -1,4 +1,4 @@
 from datetime import datetime
-t = datetime.now().time().strftime("%H%M%S")
-f = "keres"+t+".txt"
-print(f)
+import numpy as np
+a = np.linalg.norm(np.array([10,10])-np.array([9,9]))
+print(a)

@@ -1,0 +1,12 @@
+
+ 356, -50, rising
+ 353, -91, falling
+ 357, -87, rising
+ 359, -39, falling
+ 362, -44, rising
+ 364, -33, falling
+ 367, -44, rising
+ 369, -31, falling
+ 372, -43, rising
+ 372, -48, falling
+ 372, -48, rising

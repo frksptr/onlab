@@ -1,5 +1,6 @@
 from pymodbus.client.sync import ModbusTcpClient
 from helper import Edge, Filter
+from datetime import datetime
 import sys
 import numpy as np
 import RPi.GPIO as GPIO
@@ -10,7 +11,7 @@ class Msg:
     cnt = 0
     cursorup = '\033[F'
     erase = '\033[K'
-    en = 1;
+    en = 0;
     def printMsg(self, msg):
         if (self.en == 0):
             return
@@ -35,6 +36,15 @@ def getSigned16bit(a):
         return a - (1 << 16)
     return a
 
+t = datetime.now().time().strftime("%H%M%S")
+f = "test20"+t+".txt"
+
+def log(s):
+    with open(f, "a") as myfile:
+        myfile.write(s)
+    return
+
+
 GPIO.setmode (GPIO.BCM)
 GPIO.setup(4, GPIO.IN)
 
@@ -44,7 +54,6 @@ dataXReg = 1000;
 dataYReg = 1002;
 newDataReadyReg = 1006;
 dataRead = 0;
-fileName = "test1610.txt";
 
 pointArray = np.array([]);
 
@@ -100,8 +109,7 @@ while 1:
             x = getSigned16bit(xy.registers[0])
             y = getSigned16bit(xy.registers[2])
             
-            with open(fileName, "a") as myfile:
-                myfile.write("\n {}, {}, ".format(x,y) + signalType)
+            log("\n {}, {}, ".format(x,y) + signalType)
                 
             dataRead = 1;
             pointArray = np.append(pointArray, [x,y]);
