@@ -1,6 +1,8 @@
 import numpy as np
 
 def ujkeres(p1,p2,r):
+    p1 = np.array(p1)
+    p2 = np.array(p2)
     felezo = (p1+p2)/2
     diff = p1-p2
     print("diff {}".format(diff))

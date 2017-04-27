@@ -4,6 +4,7 @@ import sys
 import numpy as np
 import RPi.GPIO as GPIO
 from statemachine import StateMapElement, StateMachine
+from ujkeres import ujkeres
 
 class Msg:
     msg = ""
@@ -45,8 +46,6 @@ dataYReg = 1002;
 newDataReadyReg = 1006;
 dataRead = 0;
 fileName = "test1610.txt";
-
-pointArray = np.array([]);
 
 client = ModbusTcpClient('192.168.0.104',502)
 conn = client.connect()
@@ -132,9 +131,19 @@ while 1:
 
     # Calculates new position data and sends it to robot
     elif (cs == "CalculateNewPosition"):
-        client.write_register(502, 1)
+        newPointData = ujkeres(pointArray[0],pointArray[1],60)
+        newStart = newPointData["kezdo"]
+        newEnd = newPointData["veg"]
+
+        client.write_register(502, 10)
         client.write_register(504, 0)
+
+        client.write_register(506, 0)
+        client.write_register(508, 10)
+
         client.write_register(500, 0)
+
+
         stateMachine.event("NewPositionSet")
 
     #msg.printMsg("input: {} | filtered: {} | edge: {} ".format(input_v,signal,signalEdge))
