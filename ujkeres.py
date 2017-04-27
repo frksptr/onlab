@@ -1,15 +1,28 @@
 import numpy as np
 
-def ujkeres(p1,p2):
+def ujkeres(p1,p2,r):
     felezo = (p1+p2)/2
     diff = p1-p2
-    if diff[0] == 0:
+    print("diff {}".format(diff))
+    n = np.linalg.norm(diff)
+    print("n {}".format(n))
+    scale = 1/(n/(2*r)*r)
+    print("scale {}".format(scale))
+    if (diff[0] == 0):
         mmeroleges = 0
     else:
         m = diff[1]/diff[0]
-        mmeroleges = -1/m
-    iranyvektor = np.array([1,mmeroleges] / np.sqrt(1+mmeroleges**2))
-    return {'ujpont': felezo, 'iranyvektor': iranyvektor}
+        if (m == 0):
+            iranyvektor = np.array([0,1])
+        else:
+            mmeroleges = -1/m
+            iranyvektor = np.array([1,mmeroleges] / np.sqrt(1+mmeroleges**2))
+    
+    print("iranyvektor {}".format(iranyvektor))
+    print("felezo {}".format(felezo))
+    kezdo = felezo + iranyvektor*(2*r)
+    veg = felezo - iranyvektor*(2*r)
+    return {'kezdo': kezdo, 'veg': veg}
 
 def sortCCW(xArray, yArray):
     cx = np.mean(xArray)
@@ -39,7 +52,12 @@ def getFurthestNeighbors(x, y):
             
     return {'x': x[ind], 'y': y[ind]}
 
-p1 = np.array([0,0.6])
-p2 = np.array([0,-0.6])
+p1 = np.array([-0.707,0.707])
+p2 = np.array([0.707,0.707])
 
-a = ujkeres(p1,p2)
+#p1 = np.array([-1,0.5])
+#p2 = np.array([1,0.5])
+
+a = ujkeres(p1,p2,1)
+
+print("ujpont {}".format(a))
