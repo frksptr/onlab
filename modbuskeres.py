@@ -65,7 +65,8 @@ stateMap = [
     StateMapElement("GetMoreInitialPos","CheckPositionList","ReturnMovement"),
     StateMapElement("GetNextPos","CheckPositionList","CalculateNewPosition"),
     StateMapElement("RetMov","ReturnMovement","SignalWait"),
-    StateMapElement("NewPositionSet","CalculateNewPosition","SignalWait"),
+    StateMapElement("NewPositionSet","CalculateNewPosition","WaitScanReady"),
+    StateMapElement("ScanReady","WaitScanReady","SignalWait"),
 ]
 
 stateMachine = StateMachine(stateMap)
@@ -124,6 +125,7 @@ while 1:
         else:
             stateMachine.event("GetNextPos")
 
+    # Need to find more points, return robot movement as it were
     elif (cs == "ReturnMovement"):
         client.write_register(500,2)
         stateMachine.event("RetMov")
@@ -143,8 +145,13 @@ while 1:
 
         client.write_register(500, 0)
 
-
         stateMachine.event("NewPositionSet")
+
+    elif (cs == "WaitScanReady"):
+        dataReady = client.read_holding_registers(newDataReadyReg,1)
+        dataReady = dataReady.registers[0]
+        if (dataReady == 5):
+            stateMachine("ScanReady")
 
     #msg.printMsg("input: {} | filtered: {} | edge: {} ".format(input_v,signal,signalEdge))
 
