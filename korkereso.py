@@ -1,4 +1,7 @@
 import numpy as np
+
+def findCircle(array):
+	
 r = 1;
 p1 = np.array([1, 0]).transpose();
 p2 = np.array([0, -1]).transpose();
